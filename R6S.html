@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>R6Sキャラルーレット</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .tabs {
+      margin-bottom: 15px;
+    }
+
+    .tabs button {
+      background-color: #222;
+      border: none;
+      color: #bbb;
+      padding: 10px 20px;
+      margin-right: 8px;
+      font-weight: bold;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .tabs button.active, .tabs button:hover {
+      background-color: #e25822;
+      color: #fff;
+    }
+
+    #all-btn, #roll-btn {
+      background-color: #333;
+      border: none;
+      color: #ddd;
+      padding: 10px 18px;
+      margin: 10px 8px 10px 0;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    #all-btn:hover, #roll-btn:hover {
+      background-color: #e25822;
+      color: white;
+    }
+
+    #char-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 15px;
+      justify-content: center;
+      background-color: #1a1a1a;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+
+    .char-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .char-item img {
+      width: 64px;
+      height: 64px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      margin-bottom: 5px;
+      transition: border-color 0.3s ease;
+    }
+
+    .char-item input[type="checkbox"]:checked + img {
+      border-color: #e25822;
+    }
+
+    .char-item label {
+      font-size: 0.9rem;
+      color: #ddd;
+    }
+
+    #result {
+      margin-top: 30px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      background-color: #222;
+      color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #result img {
+      width: 120px;
+      height: 120px;
+      border-radius: 8px;
+      border: 3px solid #e25822;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      #char-list {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      }
+
+      .char-item img {
+        width: 56px;
+        height: 56px;
+      }
+
+      #result img {
+        width: 100px;
+        height: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <button id="tab-attacker" class="active">攻撃側</button>
+      <button id="tab-defender">防衛側</button>
+    </div>
+
+    <button id="all-btn">ALL</button>
+    <button id="roll-btn">ルーレット開始</button>
+
+    <div id="char-list"></div>
+    <div id="result"></div>
+  </div>
+
+<script>
+  const chars = [
+    {id: 'ash', name: 'Ash', type: 'attacker', icon: 'images/Attacker/ash.png'},
+    {id: 'sledge', name: 'Sledge', type: 'attacker', icon: 'images/Attacker/sledge.png'},
+    {id: 'thatcher', name: 'Thatcher', type: 'attacker', icon: 'images/Attacker/thatcher.png'},
+    {id: 'striker', name: 'Striker', type: 'attacker', icon: 'images/Attacker/striker.png'},
+    {id: 'thermite', name: 'Thermite', type: 'attacker', icon: 'images/Attacker/thermite.png'},
+    {id: 'twitch', name: 'Twitch', type: 'attacker', icon: 'images/Attacker/twitch.png'},
+    {id: 'montagne', name: 'Montagne', type: 'attacker', icon: 'images/Attacker/montagne.png'},
+    {id: 'glaz', name: 'Glaz', type: 'attacker', icon: 'images/Attacker/glaz.png'},
+    {id: 'fuze', name: 'Fuze', type: 'attacker', icon: 'images/Attacker/fuze.png'},
+    {id: 'blitz', name: 'Blitz', type: 'attacker', icon: 'images/Attacker/blitz.png'},
+    {id: 'buck', name: 'Buck', type: 'attacker', icon: 'images/Attacker/buck.png'},
+    {id: 'blackbeard', name: 'Blackbeard', type: 'attacker', icon: 'images/Attacker/blackbeard.png'},
+    {id: 'capitao', name: 'Capitao', type: 'attacker', icon: 'images/Attacker/capitao.png'},
+    {id: 'hibana', name: 'Hibana', type: 'attacker', icon: 'images/Attacker/hibana.png'},
+    {id: 'jackal', name: 'Jackal', type: 'attacker', icon: 'images/Attacker/jackal.png'},
+    {id: 'ying', name: 'Ying', type: 'attacker', icon: 'images/Attacker/ying.png'},
+    {id: 'zofia', name: 'Zofia', type: 'attacker', icon: 'images/Attacker/zofia.png'},
+    {id: 'dokkaebi', name: 'Dokkaebi', type: 'attacker', icon: 'images/Attacker/dokkaebi.png'},
+    {id: 'lion', name: 'Lion', type: 'attacker', icon: 'images/Attacker/lion.png'},
+    {id: 'finka', name: 'Finka', type: 'attacker', icon: 'images/Attacker/finka.png'},
+    {id: 'nomad', name: 'Nomad', type: 'attacker', icon: 'images/Attacker/nomad.png'},
+    {id: 'gridlock', name: 'Gridlock', type: 'attacker', icon: 'images/Attacker/gridlock.png'},
+    {id: 'nokk', name: 'Nokk', type: 'attacker', icon: 'images/Attacker/nokk.png'},
+    {id: 'amaru', name: 'Amaru', type: 'attacker', icon: 'images/Attacker/amaru.png'},
+    {id: 'kali', name: 'Kali', type: 'attacker', icon: 'images/Attacker/kali.png'},
+    {id: 'iana', name: 'Iana', type: 'attacker', icon: 'images/Attacker/iana.png'},
+    {id: 'ace', name: 'Ace', type: 'attacker', icon: 'images/Attacker/ace.png'},
+    {id: 'zero', name: 'Zero', type: 'attacker', icon: 'images/Attacker/zero.png'},
+    {id: 'flores', name: 'Flores', type: 'attacker', icon: 'images/Attacker/flores.png'},
+    {id: 'osa', name: 'Osa', type: 'attacker', icon: 'images/Attacker/osa.png'},
+    {id: 'grim', name: 'Grim', type: 'attacker', icon: 'images/Attacker/grim.png'},
+    {id: 'brava', name: 'Brava', type: 'attacker', icon: 'images/Attacker/brava.png'},
+    {id: 'ram', name: 'Ram', type: 'attacker', icon: 'images/Attacker/ram.png'},
+    {id: 'deimos', name: 'Deimos', type: 'attacker', icon: 'images/Attacker/deimos.png'},
+    {id: 'rauora', name: 'Rauora', type: 'attacker', icon: 'images/Attacker/osa.png'},
+    {id: 'mute', name: 'Mute', type: 'defender', icon: 'images/Defender/mute.png'},
+    {id: 'castle', name: 'Castle', type: 'defender', icon: 'images/Defender/castle.png'},
+    {id: 'mute', name: 'Mute', type: 'defender', icon: 'images/Defender/mute.png'},
+    {id: 'sentry', name: 'Sentry', type: 'defender', icon: 'images/Defender/sentry.png'},
+    {id: 'smoke', name: 'Smoke', type: 'defender', icon: 'images/Defender/smoke.png'},
+    {id: 'pulse', name: 'Pulse', type: 'defender', icon: 'images/Defender/pulse.png'},
+    {id: 'doc', name: 'Doc', type: 'defender', icon: 'images/Defender/doc.png'},
+    {id: 'rook', name: 'Rook', type: 'defender', icon: 'images/Defender/rook.png'},
+    {id: 'kapkan', name: 'Kapkan', type: 'defender', icon: 'images/Defender/kapkan.png'},
+    {id: 'tachanka', name: 'Tachanka', type: 'defender', icon: 'images/Defender/tachanka.png'},
+    {id: 'jager', name: 'Jager', type: 'defender', icon: 'images/Defender/jager.png'},
+    {id: 'frost', name: 'Frost', type: 'defender', icon: 'images/Defender/frost.png'},
+    {id: 'valkyrie', name: 'Valkyrie', type: 'defender', icon: 'images/Defender/valkyrie.png'},
+    {id: 'caveira', name: 'Caveira', type: 'defender', icon: 'images/Defender/caveira.png'},
+    {id: 'echo', name: 'Echo', type: 'defender', icon: 'images/Defender/echo.png'},
+    {id: 'lesion', name: 'Lesion', type: 'defender', icon: 'images/Defender/lesion.png'},
+    {id: 'ela', name: 'Ela', type: 'defender', icon: 'images/Defender/ela.png'},
+    {id: 'vigil', name: 'Vigil', type: 'defender', icon: 'images/Defender/vigil.png'},
+    {id: 'alibi', name: 'Alibi', type: 'defender', icon: 'images/Defender/alibi.png'},
+    {id: 'maestro', name: 'Maestro', type: 'defender', icon: 'images/Defender/maestro.png'},
+    {id: 'kaid', name: 'Kaid', type: 'defender', icon: 'images/Defender/kaid.png'},
+    {id: 'mozzie', name: 'Mozzie', type: 'defender', icon: 'images/Defender/mozzie.png'},
+    {id: 'warden', name: 'Warden', type: 'defender', icon: 'images/Defender/warden.png'},
+    {id: 'goyo', name: 'Goyo', type: 'defender', icon: 'images/Defender/goyo.png'},
+    {id: 'wamai', name: 'Wamai', type: 'defender', icon: 'images/Defender/wamai.png'},
+    {id: 'oryx', name: 'Oryx', type: 'defender', icon: 'images/Defender/oryx.png'},
+    {id: 'melusi', name: 'Melusi', type: 'defender', icon: 'images/Defender/melusi.png'},
+    {id: 'aruni', name: 'Aruni', type: 'defender', icon: 'images/Defender/aruni.png'},
+    {id: 'thunderbird', name: 'Thunderbird', type: 'defender', icon: 'images/Defender/thunderbird.png'},
+    {id: 'thorn', name: 'Thorn', type: 'defender', icon: 'images/Defender/thorn.png'},
+    {id: 'solis', name: 'Solis', type: 'defender', icon: 'images/Defender/solis.png'},
+    {id: 'fenrir', name: 'Fenrir', type: 'defender', icon: 'images/Defender/fenrir.png'},
+    {id: 'tubarao', name: 'Tubarao', type: 'defender', icon: 'images/Defender/tubarao.png'},
+    {id: 'skopos', name: 'Skopos', type: 'defender', icon: 'images/Defender/skopos.png'}
+  ];
+
+  let selected = JSON.parse(localStorage.getItem('selectedChars')) || [];
+  let currentTab = 'attacker';
+
+  const charListDiv = document.getElementById('char-list');
+  const tabAttackerBtn = document.getElementById('tab-attacker');
+  const tabDefenderBtn = document.getElementById('tab-defender');
+  const allBtn = document.getElementById('all-btn');
+  const rollBtn = document.getElementById('roll-btn');
+  const resultDiv = document.getElementById('result');
+
+  function renderChars(type) {
+    charListDiv.innerHTML = '';
+    resultDiv.innerHTML = '';
+    currentTab = type;
+    const filtered = chars.filter(c => c.type === type);
+    filtered.forEach(char => {
+      const div = document.createElement('div');
+      div.className = 'char-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = char.id;
+      checkbox.checked = selected.includes(char.id);
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) {
+          if (!selected.includes(char.id)) selected.push(char.id);
+        } else {
+          selected = selected.filter(id => id !== char.id);
+        }
+        localStorage.setItem('selectedChars', JSON.stringify(selected));
+      });
+
+      const img = document.createElement('img');
+      img.src = char.icon;
+      img.alt = char.name;
+      img.addEventListener('click', () => checkbox.click());
+
+      const label = document.createElement('label');
+      label.htmlFor = char.id;
+      label.textContent = char.name;
+
+      div.appendChild(checkbox);
+      div.appendChild(img);
+      div.appendChild(label);
+      charListDiv.appendChild(div);
+    });
+  }
+
+  tabAttackerBtn.addEventListener('click', () => {
+    tabAttackerBtn.classList.add('active');
+    tabDefenderBtn.classList.remove('active');
+    renderChars('attacker');
+  });
+
+  tabDefenderBtn.addEventListener('click', () => {
+    tabDefenderBtn.classList.add('active');
+    tabAttackerBtn.classList.remove('active');
+    renderChars('defender');
+  });
+
+  allBtn.addEventListener('click', () => {
+    const filtered = chars.filter(c => c.type === currentTab);
+    const anyChecked = filtered.some(char => selected.includes(char.id));
+    if (anyChecked) {
+      selected = selected.filter(id => !filtered.some(c => c.id === id));
+    } else {
+      filtered.forEach(char => {
+        if (!selected.includes(char.id)) selected.push(char.id);
+      });
+    }
+    localStorage.setItem('selectedChars', JSON.stringify(selected));
+    renderChars(currentTab);
+  });
+
+  rollBtn.addEventListener('click', () => {
+  // 現在のタブで選択されているキャラだけを対象にする
+  const filteredChars = chars.filter(c => c.type === currentTab && selected.includes(c.id));
+
+  if (filteredChars.length === 0) {
+    alert('このカテゴリで選択されているキャラがいません！');
+    return;
+  }
+
+  let animationInterval;
+  let index = 0;
+  const duration = 1000; // アニメーション時間(ms)
+  const intervalTime = 100; // 画像切り替え間隔(ms)
+
+  resultDiv.innerHTML = ''; // 表示リセット
+
+  animationInterval = setInterval(() => {
+    const char = filteredChars[index];
+    resultDiv.innerHTML = `<img src="${char.icon}" alt="${char.name}"> ${char.name}`;
+    index = (index + 1) % filteredChars.length;
+  }, intervalTime);
+
+  setTimeout(() => {
+    clearInterval(animationInterval);
+    const chosenChar = filteredChars[Math.floor(Math.random() * filteredChars.length)];
+    resultDiv.innerHTML = `<img src="${chosenChar.icon}" alt="${chosenChar.name}"> 選ばれたキャラ：${chosenChar.name}`;
+  }, duration);
+});
+
+
+  renderChars('attacker');
+</script>
+
+</body>
+</html>
