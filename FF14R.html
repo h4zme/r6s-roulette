@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>FF14 ジョブルーレット</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('images/jobs/QAim605TH1YRvUi9cFGReikYoI.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-align: center;
+    }
+
+    .wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .result {
+      margin-top: 20px;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(0, 0, 64, 0.6);
+      border-radius: 12px;
+      box-shadow: 0 0 12px #0ff;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .result img {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      border: 3px solid #0ff;
+      box-shadow: 0 0 8px #0ff;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .tabs button {
+      background: rgba(0, 0, 64, 0.6);
+      border: none;
+      color: #fff;
+      padding: 10px 16px;
+      margin: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tabs button.active,
+    .tabs button:hover {
+      background: rgba(0, 255, 255, 0.5);
+      color: #fff;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+    }
+
+    .controls button {
+      background-color: rgba(0, 0, 64, 0.6);
+      border: none;
+      color: #fff;
+      padding: 10px 16px;
+      margin: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .controls button:hover {
+      background-color: rgba(0, 128, 255, 0.5);
+    }
+
+    .char-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    .char-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .char-item input {
+      margin-bottom: 6px;
+    }
+
+    .char-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+    }
+
+    .char-item input:checked + img {
+      border-color: #0ff;
+    }
+
+    .rainbow {
+      animation: rainbow-glow 1s infinite;
+      border-color: #fff !important;
+      box-shadow: 0 0 15px 5px rgba(255,255,255,0.8);
+    }
+
+    @keyframes rainbow-glow {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="result" id="result">結果がここに表示されます</div>
+
+    <div class="tabs">
+      <button class="active" data-role="all">すべて</button>
+      <button data-role="tank">タンク</button>
+      <button data-role="dps">DPS</button>
+      <button data-role="healer">ヒーラー</button>
+    </div>
+
+    <div class="controls">
+      <button id="all-btn">ALL</button>
+      <button id="roll-btn">ルーレット開始</button>
+      <button id="reset">リセット</button>
+    </div>
+
+    <div class="char-list" id="char-list"></div>
+  </div>
+
+  <script>
+    const chars = [
+      {id: 'warrior', name: '戦士', role: 'tank', icon: 'images/jobs/Warrior.png'},
+      {id: 'paladin', name: 'ナイト', role: 'tank', icon: 'images/jobs/Paladin.png'},
+      {id: 'darkknight', name: '暗黒騎士', role: 'tank', icon: 'images/jobs/Darkknight.png'},
+      {id: 'gunbreaker', name: 'ガンブレイカー', role: 'tank', icon: 'images/jobs/Gunbreaker.png'},
+      {id: 'monk', name: 'モンク', role: 'dps', icon: 'images/jobs/Monk.png'},
+      {id: 'dragoon', name: '竜騎士', role: 'dps', icon: 'images/jobs/Dragoon.png'},
+      {id: 'ninja', name: '忍者', role: 'dps', icon: 'images/jobs/Ninja.png'},
+      {id: 'reaper', name: 'リーパー', role: 'dps', icon: 'images/jobs/Reaper.png'},
+      {id: 'blackmage', name: '黒魔道士', role: 'dps', icon: 'images/jobs/Blackmage.png'},
+      {id: 'redmage', name: '赤魔道士', role: 'dps', icon: 'images/jobs/Redmage.png'},
+      {id: 'summoner', name: '召喚士', role: 'dps', icon: 'images/jobs/Summoner.png'},
+      {id: 'bluamage', name: '青魔道士', role: 'dps', icon: 'images/jobs/BlueMage.png'},
+      {id: 'bard', name: '吟遊詩人', role: 'dps', icon: 'images/jobs/Bard.png'},
+      {id: 'machinist', name: '機工士', role: 'dps', icon: 'images/jobs/Machinist.png'},
+      {id: 'dancer', name: '踊り子', role: 'dps', icon: 'images/jobs/Dancer.png'},
+      {id: 'whiteMage', name: '白魔道士', role: 'healer', icon: 'images/jobs/Whitemage.png'},
+      {id: 'scholar', name: '学者', role: 'healer', icon: 'images/jobs/Scholar.png'},
+      {id: 'astrologian', name: '占星術師', role: 'healer', icon: 'images/jobs/Astrologian.png'},
+      {id: 'sage', name: '賢者', role: 'healer', icon: 'images/jobs/Sage.png'}
+    ];
+
+    let selectedIds = new Set();
+    let currentRole = 'all';
+
+    const list = document.getElementById('char-list');
+    const result = document.getElementById('result');
+    const allBtn = document.getElementById('all-btn');
+    const rollBtn = document.getElementById('roll-btn');
+    const tabButtons = document.querySelectorAll('.tabs button');
+
+    function renderList() {
+      list.innerHTML = '';
+      const filtered = currentRole === 'all' ? chars : chars.filter(c => c.role === currentRole);
+      filtered.forEach(char => {
+        const container = document.createElement('div');
+        container.className = 'char-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = selectedIds.has(char.id);
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) {
+            selectedIds.add(char.id);
+          } else {
+            selectedIds.delete(char.id);
+          }
+        });
+
+        const img = document.createElement('img');
+        img.src = char.icon;
+        img.alt = char.name;
+
+        container.appendChild(checkbox);
+        container.appendChild(img);
+        list.appendChild(container);
+      });
+    }
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentRole = btn.dataset.role;
+        renderList();
+      });
+    });
+
+    allBtn.addEventListener('click', () => {
+      const filtered = currentRole === 'all' ? chars : chars.filter(c => c.role === currentRole);
+      const anySelected = filtered.some(c => selectedIds.has(c.id));
+      filtered.forEach(c => {
+        if (anySelected) selectedIds.delete(c.id);
+        else selectedIds.add(c.id);
+      });
+      renderList();
+    });
+
+    rollBtn.addEventListener('click', () => {
+      const filtered = chars.filter(c => selectedIds.has(c.id) && (currentRole === 'all' || c.role === currentRole));
+      if (filtered.length === 0) {
+        alert('選択されたジョブがありません！');
+        return;
+      }
+
+      result.innerHTML = 'ルーレット中...';
+      let index = 0;
+      const interval = setInterval(() => {
+        const char = filtered[index % filtered.length];
+        result.innerHTML = `<img src="${char.icon}" alt="${char.name}"><br>${char.name}`;
+        index++;
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        const final = filtered[Math.floor(Math.random() * filtered.length)];
+        const isRare = final.id === 'bluamage';
+        result.innerHTML = `<img src="${final.icon}" alt="${final.name}" class="${isRare ? 'rainbow' : ''}"><br>${isRare ? '【レア】' : ''}${final.name}`;
+      }, 2500);
+    });
+
+    renderList();
+  </script>
+</body>
+</html>
