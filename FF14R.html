@@ -19,6 +19,21 @@
       padding: 20px;
     }
 
+    .history {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .history img {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      border: 2px solid #0ff;
+    }
+
     .result {
       margin-top: 20px;
       margin-bottom: 30px;
@@ -126,6 +141,7 @@
 </head>
 <body>
   <div class="wrapper">
+    <div class="history" id="history"></div>
     <div class="result" id="result">結果がここに表示されます</div>
 
     <div class="tabs">
@@ -138,6 +154,7 @@
     <div class="controls">
       <button id="all-btn">ALL</button>
       <button id="roll-btn">ルーレット開始</button>
+      <button id="toggle-dup">重複なし：OFF</button>
       <button id="reset">リセット</button>
     </div>
 
@@ -169,11 +186,17 @@
 
     let selectedIds = new Set();
     let currentRole = 'all';
+    let noDuplicate = false;
+    let history = [];
+    let usedIds = new Set();
 
     const list = document.getElementById('char-list');
     const result = document.getElementById('result');
+    const historyBox = document.getElementById('history');
     const allBtn = document.getElementById('all-btn');
     const rollBtn = document.getElementById('roll-btn');
+    const resetBtn = document.getElementById('reset');
+    const toggleDupBtn = document.getElementById('toggle-dup');
     const tabButtons = document.querySelectorAll('.tabs button');
 
     function renderList() {
@@ -187,11 +210,7 @@
         checkbox.type = 'checkbox';
         checkbox.checked = selectedIds.has(char.id);
         checkbox.addEventListener('change', () => {
-          if (checkbox.checked) {
-            selectedIds.add(char.id);
-          } else {
-            selectedIds.delete(char.id);
-          }
+          checkbox.checked ? selectedIds.add(char.id) : selectedIds.delete(char.id);
         });
 
         const img = document.createElement('img');
@@ -203,6 +222,58 @@
         list.appendChild(container);
       });
     }
+
+    function renderHistory() {
+      historyBox.innerHTML = '';
+      history.forEach(char => {
+        const img = document.createElement('img');
+        img.src = char.icon;
+        img.alt = char.name;
+        historyBox.appendChild(img);
+      });
+    }
+
+    rollBtn.addEventListener('click', () => {
+      let pool = chars.filter(c => selectedIds.has(c.id) && (currentRole === 'all' || c.role === currentRole));
+      if (noDuplicate) pool = pool.filter(c => !usedIds.has(c.id));
+
+      if (pool.length === 0) {
+        alert('選択されたジョブがありません、または全て使用済みです。');
+        return;
+      }
+
+      result.innerHTML = 'ルーレット中...';
+      let index = 0;
+      const interval = setInterval(() => {
+        const char = pool[index % pool.length];
+        result.innerHTML = `<img src="${char.icon}" alt="${char.name}"><br>${char.name}`;
+        index++;
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        const final = pool[Math.floor(Math.random() * pool.length)];
+        const isRare = final.id === 'bluamage';
+        result.innerHTML = `<img src="${final.icon}" alt="${final.name}" class="${isRare ? 'rainbow' : ''}"><br>${isRare ? '【レア】' : ''}${final.name}`;
+        history.push(final);
+        usedIds.add(final.id);
+        renderHistory();
+      }, 2500);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      selectedIds.clear();
+      usedIds.clear();
+      history = [];
+      result.innerHTML = '結果がここに表示されます';
+      renderList();
+      renderHistory();
+    });
+
+    toggleDupBtn.addEventListener('click', () => {
+      noDuplicate = !noDuplicate;
+      toggleDupBtn.textContent = `重複なし：${noDuplicate ? 'ON' : 'OFF'}`;
+    });
 
     tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -216,34 +287,8 @@
     allBtn.addEventListener('click', () => {
       const filtered = currentRole === 'all' ? chars : chars.filter(c => c.role === currentRole);
       const anySelected = filtered.some(c => selectedIds.has(c.id));
-      filtered.forEach(c => {
-        if (anySelected) selectedIds.delete(c.id);
-        else selectedIds.add(c.id);
-      });
+      filtered.forEach(c => anySelected ? selectedIds.delete(c.id) : selectedIds.add(c.id));
       renderList();
-    });
-
-    rollBtn.addEventListener('click', () => {
-      const filtered = chars.filter(c => selectedIds.has(c.id) && (currentRole === 'all' || c.role === currentRole));
-      if (filtered.length === 0) {
-        alert('選択されたジョブがありません！');
-        return;
-      }
-
-      result.innerHTML = 'ルーレット中...';
-      let index = 0;
-      const interval = setInterval(() => {
-        const char = filtered[index % filtered.length];
-        result.innerHTML = `<img src="${char.icon}" alt="${char.name}"><br>${char.name}`;
-        index++;
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(interval);
-        const final = filtered[Math.floor(Math.random() * filtered.length)];
-        const isRare = final.id === 'bluamage';
-        result.innerHTML = `<img src="${final.icon}" alt="${final.name}" class="${isRare ? 'rainbow' : ''}"><br>${isRare ? '【レア】' : ''}${final.name}`;
-      }, 2500);
     });
 
     renderList();
