@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FF14 ジョブルーレット</title>
   <style>
     body {
@@ -137,6 +138,41 @@
       0% { filter: hue-rotate(0deg); }
       100% { filter: hue-rotate(360deg); }
     }
+
+    @media screen and (max-width: 600px) {
+  .result {
+    font-size: 1.1rem;
+    padding: 12px;
+  }
+
+  .result img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .history img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .controls button,
+  .tabs button {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    margin: 4px;
+  }
+
+  .char-item img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .char-list {
+    gap: 8px;
+    padding: 10px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -152,10 +188,10 @@
     </div>
 
     <div class="controls">
-      <button id="all-btn">ALL</button>
-      <button id="roll-btn">ルーレット開始</button>
-      <button id="toggle-dup">重複なし：OFF</button>
       <button id="reset">リセット</button>
+      <button id="roll-btn">ルーレット開始</button><br>
+      <button id="all-btn">ALL</button> 
+      <button id="toggle-dup">重複なし：OFF</button>
     </div>
 
     <div class="char-list" id="char-list"></div>
@@ -205,23 +241,35 @@
       filtered.forEach(char => {
         const container = document.createElement('div');
         container.className = 'char-item';
+        const label = document.createElement('label');
+        label.style.cursor = 'pointer';
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = selectedIds.has(char.id);
+        checkbox.style.display = 'none';
         checkbox.addEventListener('change', () => {
-          checkbox.checked ? selectedIds.add(char.id) : selectedIds.delete(char.id);
-        });
+          if (checkbox.checked) {
+             selectedIds.add(char.id);
+         } else {
+            selectedIds.delete(char.id);
+          }
+          renderList(); // 再描画して画像の選択状態を反映
+       });
 
         const img = document.createElement('img');
         img.src = char.icon;
-        img.alt = char.name;
+       img.alt = char.name;
+        if (selectedIds.has(char.id)) {
+          img.style.borderColor = '#0ff';
+       }
 
-        container.appendChild(checkbox);
-        container.appendChild(img);
-        list.appendChild(container);
-      });
-    }
+            label.appendChild(checkbox);
+            label.appendChild(img);
+            container.appendChild(label);
+            list.appendChild(container);
+        });
+        }
 
     function renderHistory() {
       historyBox.innerHTML = '';
